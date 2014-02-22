@@ -16,8 +16,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"code.google.com/p/go-uuid/uuid"
 )
 
 /*
@@ -53,7 +51,7 @@ type SourceFile struct {
 // A Job represents the coverage data from a single run of a test suite.
 type Job struct {
 	RepoToken    *string       `json:"repo_token,omitempty"`
-	ServiceJobId string        `json:"service_job_id"`
+	ServiceJobId *string       `json:"service_job_id,omitempty"`
 	ServiceName  string        `json:"service_name"`
 	SourceFiles  []*SourceFile `json:"source_files"`
 	Git          *Git          `json:"git,omitempty"`
@@ -100,9 +98,9 @@ func main() {
 	//
 	// Initialize Job
 	//
-	jobId := os.Getenv("TRAVIS_JOB_ID")
-	if jobId == "" {
-		jobId = uuid.New()
+	var jobId *string
+	if id := os.Getenv("TRAVIS_JOB_ID"); id != "" {
+		jobId = &id
 	}
 	if *repotoken == "" {
 		repotoken = nil // remove the entry from json
@@ -132,6 +130,7 @@ func main() {
 	var response Response
 	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
+		fmt.Println(res.StatusCode)
 		log.Fatal(err)
 	}
 	if response.Error {
